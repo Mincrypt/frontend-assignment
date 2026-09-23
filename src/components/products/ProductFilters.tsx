@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Search, X, Filter, ArrowUpDown, RotateCcw, AlertCircle } from 'lucide-react';
-import { Category, CategoryItem } from '@/types/product';
-import Button from '../ui/Button';
+import { Search, X, Filter, ArrowUpDown, RotateCcw, AlertCircle, Tag } from 'lucide-react';
+import { Category } from '@/types/product';
 
 export interface ProductFiltersProps {
   searchTerm: string;
@@ -41,8 +40,11 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
     return cat.name || cat.slug;
   };
 
+  // Top popular categories for quick filter chips
+  const popularCategories = ['beauty', 'fragrances', 'furniture', 'groceries'];
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-3.5">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
         {/* Search Input */}
         <div className="lg:col-span-5 relative">
@@ -130,6 +132,42 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
             </button>
           )}
         </div>
+      </div>
+
+      {/* Quick Category Filter Chips */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        <span className="text-slate-500 flex items-center gap-1 shrink-0 font-medium">
+          <Tag className="w-3.5 h-3.5 text-slate-500" />
+          Quick Filter:
+        </span>
+        <button
+          type="button"
+          onClick={() => onCategoryChange('')}
+          className={`px-2.5 py-1 rounded-lg transition-all shrink-0 cursor-pointer ${
+            !selectedCategory
+              ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/50 font-semibold'
+              : 'bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/60'
+          }`}
+        >
+          All
+        </button>
+        {popularCategories.map((cat) => {
+          const isActive = selectedCategory === cat;
+          return (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => onCategoryChange(isActive ? '' : cat)}
+              className={`px-2.5 py-1 rounded-lg transition-all capitalize shrink-0 cursor-pointer ${
+                isActive
+                  ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/50 font-semibold'
+                  : 'bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/60'
+              }`}
+            >
+              {cat}
+            </button>
+          );
+        })}
       </div>
 
       {/* API Notice when both search and category are active */}

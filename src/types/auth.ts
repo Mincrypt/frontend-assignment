@@ -25,6 +25,7 @@ export interface AuthResponse {
   gender: string;
   image: string;
   token: string;
+  accessToken?: string;
   refreshToken?: string;
 }
 

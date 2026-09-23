@@ -272,9 +272,14 @@ function ProductsDashboardContent() {
       {/* Top Action & Overview Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-100">
-            Product Inventory
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-100">
+              Product Inventory
+            </h1>
+            <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-950 text-indigo-300 border border-indigo-700/60">
+              {totalCount} Items
+            </span>
+          </div>
           <p className="text-sm text-slate-400 mt-1">
             Manage, search, and monitor your catalog with live pagination and filters.
           </p>

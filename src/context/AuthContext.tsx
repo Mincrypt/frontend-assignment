@@ -42,6 +42,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async (credentials: LoginCredentials): Promise<AuthResponse> => {
       const data = await authService.loginUser(credentials);
       
+      const authToken = (data as any).token || (data as any).accessToken;
+      
       const userProfile: User = {
         id: data.id,
         username: data.username,
@@ -50,12 +52,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         lastName: data.lastName,
         gender: data.gender,
         image: data.image,
-        token: data.token,
-        refreshToken: data.refreshToken,
+        token: authToken,
+        refreshToken: (data as any).refreshToken,
       };
 
-      setStoredAuth(data.token, userProfile);
-      setToken(data.token);
+      setStoredAuth(authToken, userProfile);
+      setToken(authToken);
       setUser(userProfile);
 
       return data;
