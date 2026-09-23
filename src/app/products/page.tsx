@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
-import { Plus, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
+import { Plus, RefreshCw, Loader2 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import ProductTable from '@/components/products/ProductTable';
 import ProductCardGrid from '@/components/products/ProductCardGrid';
@@ -19,7 +19,7 @@ import { useProductOverlay } from '@/context/ProductContext';
 import { productService } from '@/services/productService';
 import { Category, Product } from '@/types/product';
 
-export default function ProductsDashboardPage() {
+function ProductsDashboardContent() {
   const { params, updateParams, resetAllParams } = useUrlParams();
   const { success, error: toastError } = useToast();
   const { applyOverlayToList, deleteLocalProduct } = useProductOverlay();
@@ -268,148 +268,146 @@ export default function ProductsDashboardPage() {
   };
 
   return (
-    <AppShell>
-      <div className="space-y-6">
-        {/* Top Action & Overview Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-100">
-              Product Inventory
-            </h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Manage, search, and monitor your catalog with live pagination and filters.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchProducts()}
-              isLoading={isLoading}
-              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
-              title="Refresh product list"
-            >
-              Refresh
-            </Button>
-
-            <Link href="/products/new">
-              <Button
-                variant="primary"
-                size="sm"
-                leftIcon={<Plus className="w-4 h-4" />}
-                className="shadow-md shadow-indigo-600/30"
-              >
-                Add Product
-              </Button>
-            </Link>
-          </div>
+    <div className="space-y-6">
+      {/* Top Action & Overview Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-100">
+            Product Inventory
+          </h1>
+          <p className="text-sm text-slate-400 mt-1">
+            Manage, search, and monitor your catalog with live pagination and filters.
+          </p>
         </div>
 
-        {/* Filter Toolbar */}
-        <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl p-4 shadow-lg shadow-black/20">
-          <ProductFilters
-            searchTerm={searchInput}
-            onSearchChange={setSearchInput}
-            selectedCategory={params.category}
-            onCategoryChange={handleCategoryChange}
-            categories={categories}
-            selectedSort={params.sort}
-            onSortChange={handleSortChange}
-            onReset={handleResetFilters}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchProducts()}
             isLoading={isLoading}
-          />
+            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
+            title="Refresh product list"
+          >
+            Refresh
+          </Button>
+
+          <Link href="/products/new">
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={<Plus className="w-4 h-4" />}
+              className="shadow-md shadow-indigo-600/30"
+            >
+              Add Product
+            </Button>
+          </Link>
         </div>
+      </div>
 
-        {/* Error State */}
-        {fetchError && !isLoading && (
-          <EmptyState
-            type="error"
-            title="Failed to Load Products"
-            description={fetchError}
-            actionText="Retry Request"
-            onAction={fetchProducts}
-          />
-        )}
+      {/* Filter Toolbar */}
+      <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl p-4 shadow-lg shadow-black/20">
+        <ProductFilters
+          searchTerm={searchInput}
+          onSearchChange={setSearchInput}
+          selectedCategory={params.category}
+          onCategoryChange={handleCategoryChange}
+          categories={categories}
+          selectedSort={params.sort}
+          onSortChange={handleSortChange}
+          onReset={handleResetFilters}
+          isLoading={isLoading}
+        />
+      </div>
 
-        {/* Loading Skeletons */}
-        {isLoading && (
-          <div>
-            <div className="hidden md:block">
-              <TableSkeleton rows={params.limit} />
-            </div>
-            <div className="md:hidden">
-              <CardSkeleton count={Math.min(params.limit, 6)} />
-            </div>
+      {/* Error State */}
+      {fetchError && !isLoading && (
+        <EmptyState
+          type="error"
+          title="Failed to Load Products"
+          description={fetchError}
+          actionText="Retry Request"
+          onAction={fetchProducts}
+        />
+      )}
+
+      {/* Loading Skeletons */}
+      {isLoading && (
+        <div>
+          <div className="hidden md:block">
+            <TableSkeleton rows={params.limit} />
           </div>
-        )}
-
-        {/* Empty States */}
-        {!isLoading && !fetchError && products.length === 0 && (
-          <div>
-            {params.search ? (
-              <EmptyState
-                type="search"
-                title={`No products match "${params.search}"`}
-                description="Try checking for typos or clear your search to browse all items."
-                actionText="Clear Search"
-                onAction={() => setSearchInput('')}
-              />
-            ) : params.category ? (
-              <EmptyState
-                type="category"
-                title={`No products found in "${params.category}"`}
-                description="There are currently no items in this category."
-                actionText="View All Categories"
-                onAction={() => handleCategoryChange('')}
-              />
-            ) : (
-              <EmptyState
-                type="products"
-                title="Catalog is empty"
-                description="No products were found. Start by creating a new product."
-                actionText="Add First Product"
-                onAction={() => {
-                  window.location.href = '/products/new';
-                }}
-              />
-            )}
+          <div className="md:hidden">
+            <CardSkeleton count={Math.min(params.limit, 6)} />
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Product Views: Desktop Table & Mobile Cards */}
-        {!isLoading && !fetchError && products.length > 0 && (
-          <div className="space-y-4">
-            {/* Desktop Table View */}
-            <div className="hidden md:block">
-              <ProductTable
-                products={products}
-                currentSort={params.sort}
-                onSortToggle={handleSortToggle}
-                onDeleteClick={handleDeleteTrigger}
-              />
-            </div>
+      {/* Empty States */}
+      {!isLoading && !fetchError && products.length === 0 && (
+        <div>
+          {params.search ? (
+            <EmptyState
+              type="search"
+              title={`No products match "${params.search}"`}
+              description="Try checking for typos or clear your search to browse all items."
+              actionText="Clear Search"
+              onAction={() => setSearchInput('')}
+            />
+          ) : params.category ? (
+            <EmptyState
+              type="category"
+              title={`No products found in "${params.category}"`}
+              description="There are currently no items in this category."
+              actionText="View All Categories"
+              onAction={() => handleCategoryChange('')}
+            />
+          ) : (
+            <EmptyState
+              type="products"
+              title="Catalog is empty"
+              description="No products were found. Start by creating a new product."
+              actionText="Add First Product"
+              onAction={() => {
+                window.location.href = '/products/new';
+              }}
+            />
+          )}
+        </div>
+      )}
 
-            {/* Mobile Cards View */}
-            <div className="md:hidden">
-              <ProductCardGrid
-                products={products}
-                onDeleteClick={handleDeleteTrigger}
-              />
-            </div>
-
-            {/* Manual Pagination */}
-            <Pagination
-              currentPage={params.page}
-              pageSize={params.limit}
-              totalItems={totalCount}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-              disabled={isLoading}
+      {/* Product Views: Desktop Table & Mobile Cards */}
+      {!isLoading && !fetchError && products.length > 0 && (
+        <div className="space-y-4">
+          {/* Desktop Table View */}
+          <div className="hidden md:block">
+            <ProductTable
+              products={products}
+              currentSort={params.sort}
+              onSortToggle={handleSortToggle}
+              onDeleteClick={handleDeleteTrigger}
             />
           </div>
-        )}
-      </div>
+
+          {/* Mobile Cards View */}
+          <div className="md:hidden">
+            <ProductCardGrid
+              products={products}
+              onDeleteClick={handleDeleteTrigger}
+            />
+          </div>
+
+          {/* Manual Pagination */}
+          <Pagination
+            currentPage={params.page}
+            pageSize={params.limit}
+            totalItems={totalCount}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            disabled={isLoading}
+          />
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteModal
@@ -424,6 +422,23 @@ export default function ProductsDashboardPage() {
         product={productToDelete}
         isLoading={isDeleting}
       />
+    </div>
+  );
+}
+
+export default function ProductsDashboardPage() {
+  return (
+    <AppShell>
+      <Suspense
+        fallback={
+          <div className="space-y-6">
+            <div className="h-10 w-48 bg-slate-800 animate-pulse rounded-lg" />
+            <TableSkeleton rows={10} />
+          </div>
+        }
+      >
+        <ProductsDashboardContent />
+      </Suspense>
     </AppShell>
   );
 }
