@@ -67,8 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearStoredAuth();
     setToken(null);
     setUser(null);
-    router.push('/login');
-  }, [router]);
+    window.location.href = '/login';
+  }, []);
 
   const refreshUser = useCallback(async () => {
     try {

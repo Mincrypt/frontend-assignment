@@ -24,12 +24,12 @@ function LoginContent() {
   useEffect(() => {
     if (isAuthenticated) {
       const redirect = searchParams.get('redirect') || '/products';
-      router.replace(redirect);
+      window.location.href = redirect;
     }
     if (searchParams.get('sessionExpired')) {
       setErrorMessage('Your session has expired. Please log in again.');
     }
-  }, [isAuthenticated, router, searchParams]);
+  }, [isAuthenticated, searchParams]);
 
   const validateForm = () => {
     const errors: { username?: string; password?: string } = {};
@@ -62,13 +62,13 @@ function LoginContent() {
       success(`Welcome back, ${response.firstName || response.username}!`, 'You have successfully logged in.');
       
       const redirect = searchParams.get('redirect') || '/products';
-      router.push(redirect);
+      // Instant redirect
+      window.location.href = redirect;
     } catch (err: any) {
       const errorMsg =
         err.message || 'Invalid username or password. Please verify your credentials.';
       setErrorMessage(errorMsg);
       toastError('Login Failed', errorMsg);
-    } finally {
       setIsLoading(false);
     }
   };
